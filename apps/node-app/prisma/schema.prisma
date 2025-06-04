@@ -1,0 +1,279 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+/// Enum for modules sourced by plan or individual
+enum Source {
+  plan
+  individual
+}
+
+model PlanModuleLimit {
+  id          Int    @id @default(autoincrement())
+  plan        Plan   @relation(fields: [planId], references: [id])
+  planId      Int
+  module      Module @relation(fields: [moduleId], references: [id])
+  moduleId    Int
+  maxPerDay   Int
+  maxPerMonth Int
+  maxTotal    Int
+
+  @@map("plan_module_limits")
+}
+
+model ModuleUsageLog {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  module    Module   @relation(fields: [moduleId], references: [id])
+  moduleId  Int
+  action    String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+
+  @@map("module_usage_logs")
+}
+
+model Module {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Decimal?
+  slug        String   @unique
+
+  // relations
+  limits      PlanModuleLimit[]
+  usages      ModuleUsageLog[]
+  planModules PlanModule[]      @relation("PlanToModule")
+  userModules UserModule[]
+
+  @@map("modules")
+}
+
+model Role {
+  id       Int     @id @default(autoincrement())
+  name     String
+  canRead  Boolean
+  canWrite Boolean
+  users    User[]
+
+  @@map("roles")
+}
+
+model Plan {
+  id          Int      @id @default(autoincrement())
+  name        String
+  price       Decimal?
+  description String?
+
+  planModules PlanModule[]      @relation("PlanToModule")
+  limits      PlanModuleLimit[]
+  userPlans   UserPlan[]
+
+  @@map("plans")
+}
+
+model PlanModule {
+  id       Int    @id @default(autoincrement())
+  planId   Int
+  moduleId Int
+  plan     Plan   @relation("PlanToModule", fields: [planId], references: [id])
+  module   Module @relation("PlanToModule", fields: [moduleId], references: [id])
+
+  @@map("plans_modules")
+}
+
+model UserModule {
+  id       Int    @id @default(autoincrement())
+  user     User   @relation(fields: [userId], references: [id])
+  userId   Int
+  module   Module @relation(fields: [moduleId], references: [id])
+  moduleId Int
+  source   Source
+
+  @@map("users_modules")
+}
+
+model UserPlan {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  plan      Plan     @relation(fields: [planId], references: [id])
+  planId    Int
+  active    Boolean
+  startDate DateTime @map("start_date")
+  endDate   DateTime @map("end_date")
+
+  @@map("user_plans")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  username       String   @unique
+  email          String   @unique
+  emailValidated Boolean  @map("email_validated")
+  password       String
+  firstName      String   @map("first_name")
+  lastName       String   @map("last_name")
+  parentUser     User?    @relation("UserToParent", fields: [parentUserId], references: [id])
+  parentUserId   Int?     @map("parent_user_id")
+  children       User[]   @relation("UserToParent")
+  role           Role     @relation(fields: [roleId], references: [id])
+  roleId         Int      @map("role_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  IsActive       Boolean  @default(true) @map("IsActive")
+
+  groups       UserGroup[]
+  ownsGroups   Group[]          @relation("GroupOwner")
+  categories   Category[]
+  suppliers    Supplier[]
+  products     Product[]
+  customers    Customer[]
+  orders       Order[]
+  transactions Transaction[]
+  userPlans    UserPlan[]
+  userModules  UserModule[]
+  moduleLogs   ModuleUsageLog[]
+  Stock        Stock[]
+
+  @@map("users")
+}
+
+model Group {
+  id      Int         @id @default(autoincrement())
+  name    String
+  owner   User        @relation("GroupOwner", fields: [userId], references: [id])
+  userId  Int
+  members UserGroup[]
+
+  @@map("groups")
+}
+
+model UserGroup {
+  id       Int     @id @default(autoincrement())
+  user     User    @relation(fields: [userId], references: [id])
+  userId   Int
+  group    Group   @relation(fields: [groupId], references: [id])
+  groupId  Int
+  canRed   Boolean @map("can_red")
+  canWrite Boolean @map("can_write")
+
+  @@map("user_groups")
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  owner       User      @relation(fields: [userId], references: [id])
+  userId      Int
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Supplier {
+  id           Int       @id @default(autoincrement())
+  name         String
+  contactName  String?   @map("contact_name")
+  contactEmail String?   @map("contact_email")
+  contactPhone String?   @map("contact_phone")
+  owner        User      @relation(fields: [userId], references: [id])
+  userId       Int
+  products     Product[]
+
+  @@map("suppliers")
+}
+
+model Product {
+  id           Int           @id @default(autoincrement())
+  name         String
+  description  String?
+  category     Category      @relation(fields: [categoryId], references: [id])
+  categoryId   Int
+  supplier     Supplier      @relation(fields: [supplierId], references: [id])
+  supplierId   Int
+  price        Decimal?
+  slug         String?
+  owner        User          @relation(fields: [userId], references: [id])
+  userId       Int
+  orderItems   OrderItem[]
+  stock        Stock[]
+  transactions Transaction[]
+
+  @@map("products")
+}
+
+model Customer {
+  id        Int     @id @default(autoincrement())
+  firstName String  @map("first_name")
+  lastName  String  @map("last_name")
+  email     String
+  phone     String?
+  owner     User    @relation(fields: [userId], references: [id])
+  userId    Int
+  orders    Order[]
+
+  @@map("customers")
+}
+
+model Order {
+  id         Int         @id @default(autoincrement())
+  customer   Customer    @relation(fields: [customerId], references: [id])
+  customerId Int
+  orderDate  DateTime    @map("order_date")
+  status     String
+  owner      User        @relation(fields: [userId], references: [id])
+  userId     Int
+  items      OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  order     Order    @relation(fields: [orderId], references: [id])
+  orderId   Int
+  product   Product  @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int
+  price     Decimal?
+
+  @@map("order_items")
+}
+
+model Stock {
+  id        Int     @id @default(autoincrement())
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+  quantity  Int
+  owner     User    @relation(fields: [userId], references: [id])
+  userId    Int
+
+  @@map("stock")
+}
+
+model Transaction {
+  id              Int      @id @default(autoincrement())
+  product         Product  @relation(fields: [productId], references: [id])
+  productId       Int
+  quantity        Int
+  transactionDate DateTime @map("transaction_date")
+  type            String
+  owner           User     @relation(fields: [userId], references: [id])
+  userId          Int
+
+  @@map("transactions")
+}
