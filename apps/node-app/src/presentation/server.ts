@@ -1,6 +1,6 @@
 import express, { Router } from "express";
 import cors from "cors";
-import path from "path";
+import type { Express } from 'express';
 
 interface Options {
   port: number;
@@ -9,7 +9,7 @@ interface Options {
 }
 
 export class Server {
-  public readonly app = express();
+  public readonly app: Express = express();
   private serverListener?: any;
   private readonly port: number;
   private readonly publicPath: string;

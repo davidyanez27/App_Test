@@ -1,10 +1,12 @@
-import { RouterProvider } from "react-router-dom"
-import { router } from "./router/router"
-
+import { BrowserRouter } from "react-router";
+import { AppRouter } from "./router/AppRouter";
+import { ScrollToTop } from "./components/common/ScrollToTop";
 
 export const App = () => {
   return (
-    <RouterProvider router={ router }/>
-
-  )
-}
+    <BrowserRouter>
+      <ScrollToTop />
+      <AppRouter />
+    </BrowserRouter>
+  );
+};

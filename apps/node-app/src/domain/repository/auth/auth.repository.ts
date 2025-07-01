@@ -1,7 +1,8 @@
-import { DeleteUserDto, LoginUserDto, RegisterUserDto, UpdateUserDto } from "../../dtos";
-import { user, UserEntity } from "../../entities";
+import { loginUserInterface } from "@interfaces/auth.interface";
+import { LoginUserDto, RegisterUserDto } from "../../dtos";
 
 export abstract class AuthRepository{
-    abstract register     ( user: RegisterUserDto ): Promise<user>;
-    abstract login        ( user: LoginUserDto    ): Promise<user>;
+    abstract register     ( user  : RegisterUserDto ): Promise<loginUserInterface>;
+    abstract login        ( user  : LoginUserDto    ): Promise<loginUserInterface>;
+    abstract renewToken   ( token : string          ): Promise<string>;
 }

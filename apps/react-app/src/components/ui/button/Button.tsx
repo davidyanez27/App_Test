@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { ReactNode } from "react";
 
 interface ButtonProps {
   children: ReactNode; // Button text or content
@@ -11,7 +11,7 @@ interface ButtonProps {
   className?: string; // Disabled state
 }
 
-export const Button= ({
+const Button: React.FC<ButtonProps> = ({
   children,
   size = "md",
   variant = "primary",
@@ -20,7 +20,7 @@ export const Button= ({
   onClick,
   className = "",
   disabled = false,
-}: ButtonProps) => {
+}) => {
   // Size Classes
   const sizeClasses = {
     sm: "px-4 py-3 text-sm",
@@ -52,3 +52,4 @@ export const Button= ({
   );
 };
 
+export default Button;

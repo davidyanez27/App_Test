@@ -22,12 +22,12 @@ enum Source {
 model PlanModuleLimit {
   id          Int    @id @default(autoincrement())
   plan        Plan   @relation(fields: [planId], references: [id])
-  planId      Int
+  planId      Int    @map("plan_id")
   module      Module @relation(fields: [moduleId], references: [id])
-  moduleId    Int
-  maxPerDay   Int
-  maxPerMonth Int
-  maxTotal    Int
+  moduleId    Int    @map("module_id")
+  maxPerDay   Int    @map("max_per_day")
+  maxPerMonth Int    @map("max_per_month")
+  maxTotal    Int    @map("max_total")
 
   @@map("plan_module_limits")
 }
@@ -35,12 +35,12 @@ model PlanModuleLimit {
 model ModuleUsageLog {
   id        Int      @id @default(autoincrement())
   user      User     @relation(fields: [userId], references: [id])
-  userId    Int
+  userId    Int      @map("user_id")
   module    Module   @relation(fields: [moduleId], references: [id])
-  moduleId  Int
+  moduleId  Int      @map("module_id")
   action    String
   quantity  Int      @default(1)
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("module_usage_logs")
 }
@@ -62,10 +62,10 @@ model Module {
 }
 
 model Role {
-  id       Int     @id @default(autoincrement())
-  name     String
-  canRead  Boolean
-  canWrite Boolean
+  id       Int      @id @default(autoincrement())
+  name     String 
+  canRead  Boolean  @map("can_read")
+  canWrite Boolean  @map("can_write")
   users    User[]
 
   @@map("roles")
@@ -86,8 +86,8 @@ model Plan {
 
 model PlanModule {
   id       Int    @id @default(autoincrement())
-  planId   Int
-  moduleId Int
+  planId   Int    @map("plan_id")
+  moduleId Int    @map("module_id")
   plan     Plan   @relation("PlanToModule", fields: [planId], references: [id])
   module   Module @relation("PlanToModule", fields: [moduleId], references: [id])
 
@@ -95,11 +95,11 @@ model PlanModule {
 }
 
 model UserModule {
-  id       Int    @id @default(autoincrement())
-  user     User   @relation(fields: [userId], references: [id])
-  userId   Int
-  module   Module @relation(fields: [moduleId], references: [id])
-  moduleId Int
+  id       Int     @id @default(autoincrement())
+  user     User    @relation(fields: [userId], references: [id])
+  userId   Int     @map("user_id")
+  module   Module  @relation(fields: [moduleId], references: [id])
+  moduleId Int     @map("module_id")
   source   Source
 
   @@map("users_modules")
@@ -110,7 +110,7 @@ model UserPlan {
   user      User     @relation(fields: [userId], references: [id])
   userId    Int
   plan      Plan     @relation(fields: [planId], references: [id])
-  planId    Int
+  planId    Int      @map("plan_id")
   active    Boolean
   startDate DateTime @map("start_date")
   endDate   DateTime @map("end_date")
@@ -120,6 +120,7 @@ model UserPlan {
 
 model User {
   id             Int      @id @default(autoincrement())
+  uuid           String   @default(uuid()) @unique
   username       String   @unique
   email          String   @unique
   emailValidated Boolean  @map("email_validated")
@@ -131,9 +132,13 @@ model User {
   children       User[]   @relation("UserToParent")
   role           Role     @relation(fields: [roleId], references: [id])
   roleId         Int      @map("role_id")
+
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId Int?          @map("organization_id") 
+
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
-  IsActive       Boolean  @default(true) @map("IsActive")
+  IsActive       Boolean  @default(true) @map("is_active")
 
   groups       UserGroup[]
   ownsGroups   Group[]          @relation("GroupOwner")
@@ -144,7 +149,7 @@ model User {
   orders       Order[]
   transactions Transaction[]
   userPlans    UserPlan[]
-  userModules  UserModule[]
+  userModules  UserModule[]     
   moduleLogs   ModuleUsageLog[]
   Stock        Stock[]
 
@@ -155,7 +160,7 @@ model Group {
   id      Int         @id @default(autoincrement())
   name    String
   owner   User        @relation("GroupOwner", fields: [userId], references: [id])
-  userId  Int
+  userId  Int         @map("user_id")
   members UserGroup[]
 
   @@map("groups")
@@ -164,9 +169,9 @@ model Group {
 model UserGroup {
   id       Int     @id @default(autoincrement())
   user     User    @relation(fields: [userId], references: [id])
-  userId   Int
+  userId   Int     @map("user_id")
   group    Group   @relation(fields: [groupId], references: [id])
-  groupId  Int
+  groupId  Int     @map("group_id")
   canRed   Boolean @map("can_red")
   canWrite Boolean @map("can_write")
 
@@ -178,7 +183,7 @@ model Category {
   name        String
   description String?
   owner       User      @relation(fields: [userId], references: [id])
-  userId      Int
+  userId      Int       @map("user_id")
   products    Product[]
 
   @@map("categories")
@@ -191,7 +196,7 @@ model Supplier {
   contactEmail String?   @map("contact_email")
   contactPhone String?   @map("contact_phone")
   owner        User      @relation(fields: [userId], references: [id])
-  userId       Int
+  userId       Int       @map("user_id")
   products     Product[]
 
   @@map("suppliers")
@@ -202,14 +207,14 @@ model Product {
   name         String
   description  String?
   category     Category      @relation(fields: [categoryId], references: [id])
-  categoryId   Int
+  categoryId   Int           @map("category_id")
   supplier     Supplier      @relation(fields: [supplierId], references: [id])
-  supplierId   Int
+  supplierId   Int           @map("supplier_id")
   price        Decimal?
   slug         String?
   owner        User          @relation(fields: [userId], references: [id])
-  userId       Int
-  orderItems   OrderItem[]
+  userId       Int           @map("user_id")
+  orderItems   OrderItem[]   
   stock        Stock[]
   transactions Transaction[]
 
@@ -223,7 +228,7 @@ model Customer {
   email     String
   phone     String?
   owner     User    @relation(fields: [userId], references: [id])
-  userId    Int
+  userId    Int     @map("user_id")
   orders    Order[]
 
   @@map("customers")
@@ -232,11 +237,11 @@ model Customer {
 model Order {
   id         Int         @id @default(autoincrement())
   customer   Customer    @relation(fields: [customerId], references: [id])
-  customerId Int
+  customerId Int         @map("customer_id")
   orderDate  DateTime    @map("order_date")
   status     String
   owner      User        @relation(fields: [userId], references: [id])
-  userId     Int
+  userId     Int         @map("user_id")
   items      OrderItem[]
 
   @@map("orders")
@@ -245,10 +250,10 @@ model Order {
 model OrderItem {
   id        Int      @id @default(autoincrement())
   order     Order    @relation(fields: [orderId], references: [id])
-  orderId   Int
+  orderId   Int      @map("order_id")
   product   Product  @relation(fields: [productId], references: [id])
-  productId Int
-  quantity  Int
+  productId Int      @map("product_id")
+  quantity  Int      
   price     Decimal?
 
   @@map("order_items")
@@ -257,10 +262,10 @@ model OrderItem {
 model Stock {
   id        Int     @id @default(autoincrement())
   product   Product @relation(fields: [productId], references: [id])
-  productId Int
+  productId Int     @map("product_id")
   quantity  Int
   owner     User    @relation(fields: [userId], references: [id])
-  userId    Int
+  userId    Int     @map("user_id")
 
   @@map("stock")
 }
@@ -268,12 +273,23 @@ model Stock {
 model Transaction {
   id              Int      @id @default(autoincrement())
   product         Product  @relation(fields: [productId], references: [id])
-  productId       Int
+  productId       Int      @map("product_id")
   quantity        Int
   transactionDate DateTime @map("transaction_date")
   type            String
   owner           User     @relation(fields: [userId], references: [id])
-  userId          Int
+  userId          Int      @map("user_id")
 
   @@map("transactions")
+}
+
+model Organization {
+  id              Int      @id @default(autoincrement())
+  name            String   @unique
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  users           User[]
+
+  @@map("organization")
 }

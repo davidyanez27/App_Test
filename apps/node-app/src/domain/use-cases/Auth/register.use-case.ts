@@ -1,17 +1,17 @@
+import { loginUserInterface } from "@interfaces/auth.interface";
 import { RegisterUserDto } from "../../dtos";
-import { user } from "../../entities";
-import { AuthRepository, UserRepository } from "../../repository";
+import { AuthRepository} from "../../repository";
 
 interface RegisterUseCase {
-        execute(user: RegisterUserDto): Promise<user>;
+        execute(user: RegisterUserDto): Promise<loginUserInterface>;
 }
 
-export class RegisterUser implements RegisterUseCase {
+export class Register implements RegisterUseCase {
         constructor(
                 private readonly repository: AuthRepository
         ) { }
 
-        execute(user: RegisterUserDto): Promise<user> {
+        execute(user: RegisterUserDto): Promise<loginUserInterface> {
                 return this.repository.register(user);
         }
 

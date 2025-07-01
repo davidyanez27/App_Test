@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/Interfaces" },
+    { "path": "apps/node-app" },
+    { "path": "apps/react-app" }
+  ]
+}

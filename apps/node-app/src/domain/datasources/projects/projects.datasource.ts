@@ -1,5 +1,4 @@
 import { DeleteUserDto, LoginUserDto, RegisterUserDto, UpdateUserDto } from "../../dtos";
-import { user, UserEntity } from "../../entities";
 
 
 export abstract class ProjectsDatasource{

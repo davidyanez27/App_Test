@@ -6,7 +6,7 @@ export class LoginUserDto {
 
     ){}
 
-    static login ( payload: { [key:string]:any}): [string?, LoginUserDto?]{
+    static create ( payload: { [key:string]:any}): [string?, LoginUserDto?]{
         const{ password, email} = payload;
 
         

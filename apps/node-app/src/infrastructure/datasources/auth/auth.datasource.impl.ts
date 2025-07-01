@@ -1,19 +1,21 @@
 import { AuthDatasource } from '../../../domain/datasources';
-import { user, UserEntity } from '../../../domain/entities';
-import { DeleteUserDto, LoginUserDto, RegisterUserDto, UpdateUserDto, UserDto } from '../../../domain/dtos';
+import { UserEntity } from '../../../domain/entities';
+import { LoginUserDto, RegisterUserDto} from '../../../domain/dtos';
 import { CustomError } from '../../../domain/errors/customs.error';
-import { bcryptAdapter, envs, Jwt } from '../../../config';
+import { bcryptAdapter, envs, Jwt, UUID } from '../../../config';
 import { prisma } from '../../../data/PotsgreSQL';
-import { EmailService } from '../../../presentation/Email';
+import { EmailService, TokenService} from '../../../presentation/Services';
+import { AuthJwtPayloaInterface, loginUserInterface } from '@interfaces/auth.interface';
+
 
 export class AuthDatasourceImpl implements AuthDatasource {
 
     constructor (
         private readonly emailService : EmailService,
+        private readonly tokenService : TokenService,
     ){}
     
-    //Register
-    async register(user: RegisterUserDto): Promise<user> {
+    async register(user: RegisterUserDto): Promise<loginUserInterface> {
 
         const existUser = await prisma.user.findUnique({ where: { email: user.email }  })
         if (existUser) throw CustomError.badRequest('email alredy exists');
@@ -29,65 +31,51 @@ export class AuthDatasourceImpl implements AuthDatasource {
             {
                 data: {
                     ...user,
+                    uuid:UUID.generate(),
                     emailValidated: false,
                     password: bcryptAdapter.hash(user.password),
+                    roleId:user.roleId,
+                    
                 }
             }
         )
         // await this.sendValidationEmail( newUser.email )        
-        return this.CreateToken(UserEntity.fromObject(newUser));
+        return this.tokenService.CreateToken(UserEntity.fromObject(newUser));
 
     }
 
-    //Login
-    async login(user: LoginUserDto ): Promise<user> {
+    async login(user: LoginUserDto ): Promise<loginUserInterface> {
 
         const {email} = user        
 
-        const existUser = await prisma.user.findUnique({where: { email }})
+        const existUser = await prisma.user.findUnique({where: { email}})
         if(!existUser) throw CustomError.badRequest('Invalid Credentials');
+
+        if(existUser.IsActive === false) throw CustomError.forbidden('This user are deactivated please contact you admin')
         
         const isMatching = bcryptAdapter.compare(user.password, existUser.password);
         if (!isMatching) throw CustomError.badRequest('Invalid Credentials');
 
-        return this.CreateToken(UserEntity.fromObject(existUser))
+        return this.tokenService.CreateToken(UserEntity.fromObject(existUser))
 
 
     }
 
-    private async CreateToken(user: UserEntity,): Promise<user>{
-        const token = await Jwt.generateToken({username: user.username})
-        if (!token) throw CustomError.internalServer("Error while creating JWT")
-        
-        const [error, userDto] = UserDto.userDto(user)
-        if(error) throw CustomError.internalServer(error)
-
-        return {
-            user: userDto!, 
-            jwt:token
-        }
-    }
-
-     async sendValidationEmail( email: string): Promise<void>{
-        const token = await Jwt.generateToken({email});
+    async renewToken(token: string): Promise<string> {
         if (!token) throw CustomError.internalServer('Error getting token');
+        
+        const decode = await Jwt.validateToken<AuthJwtPayloaInterface>(token);
+        if (!decode || typeof decode !== 'object' || !('id' in decode)) throw CustomError.internalServer('Invalid token');
 
-        const link = `${ envs.WEBSERVICE_URL }/auth/validate-email/${token}`;
-        const html = `
-            <h1>Validate your Email</h1>
-            <p>Please click on the following link to validate your email</p>
-            <a href="${ link }">Validate your email: ${ email }</a>
+        const {id, firstName, lastName, roleId} = decode;
 
-        `
-        const options = {
-            to: email, 
-            subject: 'Validate your email',
-            htmlBody: html,
-        }
+        
+        const newtoken = await Jwt.generateToken({id, firstName, lastName, roleId})
+        if (!newtoken) throw CustomError.internalServer("Error while creating JWT")
 
-        const isSet = await this.emailService.sendEmail(options);
-        if (!isSet) throw CustomError.internalServer('Error sending email');
 
+        return newtoken
+         
     }
 
 

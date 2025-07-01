@@ -1,4 +1,5 @@
 import type React from "react";
+import type { FC } from "react";
 
 interface InputProps {
   type?: "text" | "number" | "email" | "password" | "date" | "time" | string;
@@ -17,7 +18,7 @@ interface InputProps {
   hint?: string;
 }
 
-export const Input = ({
+const Input: FC<InputProps> = ({
   type = "text",
   id,
   name,
@@ -32,7 +33,7 @@ export const Input = ({
   success = false,
   error = false,
   hint,
-}: InputProps) => {
+}) => {
   let inputClasses = ` h-11 w-full rounded-lg border appearance-none px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3  dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 ${className}`;
 
   if (disabled) {
@@ -78,3 +79,4 @@ export const Input = ({
   );
 };
 
+export default Input;

@@ -1,5 +1,4 @@
 import { regularExps } from "../../../config";
-import { prisma } from "../../../data/PotsgreSQL";
 
 export class CreateUserDto {
     constructor(
@@ -18,6 +17,7 @@ export class CreateUserDto {
         const {username, email, password, firstName, lastName, role } = props;
 
         if( !username ) return ['username property is required'];
+        if( !regularExps.username.test(username) ) return ['Invalid username format, please avoid using special characters'] 
         if( !regularExps.email.test(email) ) return ['email property is required'];
         if( !password ) return ['password property is required'];
         if( !regularExps.password.test(password)) return ['password contains at least eight characters, one special characters, uppercase and one number'];
@@ -25,6 +25,8 @@ export class CreateUserDto {
         if( !lastName ) return ['lastName property is required'];
         if( !role ) return ['role property is required'];
         if (isNaN(role)) return ['role property must be a integer'];
+        if (role < 0) return ['role property must be a valid positive integer'];
+
         
         return [undefined, new CreateUserDto( username, email, password, firstName, lastName, role)];
     }

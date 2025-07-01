@@ -1,16 +1,9 @@
-import { UserDto } from "../../dtos";
 import { CustomError } from "../../errors/customs.error";
-
-
-export interface user {
-    user: UserDto,
-    jwt:string
-}
-
 
 export class UserEntity {
 
     constructor(
+        public uuid: string,
         public username: string,
         public email: string,
         public emailValidated: boolean,
@@ -26,6 +19,7 @@ export class UserEntity {
 
     static fromObject(Payload: { [key: string]: any }): UserEntity {
         const {
+            uuid,
             username,
             email,
             emailValidated,
@@ -39,7 +33,7 @@ export class UserEntity {
         } = Payload
         
 
-      
+        if (!uuid) throw CustomError.badRequest('Missing uuid');
         if (!username) throw CustomError.badRequest('Missing username');
         if (!email) throw CustomError.badRequest('Missing email');
         if (emailValidated === undefined) throw CustomError.badRequest('Missing email');
@@ -52,7 +46,7 @@ export class UserEntity {
 
  
 
-        return new UserEntity( username, email,emailValidated, password, firstName, lastName, roleId, createdAt, updatedAt, parentUserId)
+        return new UserEntity( uuid,username, email, emailValidated, password, firstName, lastName, roleId, createdAt, updatedAt, parentUserId)
     }
 
 
