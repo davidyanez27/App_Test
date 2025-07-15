@@ -5,4 +5,6 @@ export abstract class AuthRepository{
     abstract register     ( user  : RegisterUserDto ): Promise<loginUserInterface>;
     abstract login        ( user  : LoginUserDto    ): Promise<loginUserInterface>;
     abstract renewToken   ( token : string          ): Promise<string>;
+    abstract OAuth2       ( token : string          ): Promise<string>;
+
 }

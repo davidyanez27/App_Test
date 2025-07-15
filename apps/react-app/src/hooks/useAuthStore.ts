@@ -19,13 +19,47 @@ export const useAuthStore = () => {
             dispatch( onLogin({ username: data.user.username, email: data.user.email }) );
             
         } catch (error) {
-            dispatch( onLogout('Credenciales incorrectas') );
+            dispatch( onLogout('Invalid Credentials') );
             setTimeout(() => {
                 dispatch( clearErrorMessage() );
             }, 10);
         }
     }
 
+    const OAuth2Login = async() => {
+        dispatch( onChecking() );
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get("code");
+            console.log(`Code ${code}`)
+            const { data } = await InventoryBackend.get('/auth/google');
+            localStorage.setItem('token', data.token );
+            localStorage.setItem("token-init-date", new Date().getTime().toString());
+            dispatch( onLogin({ username: data.user.username, email: data.user.email }) );
+            
+        } catch (error) {
+            dispatch( onLogout('Invalid Credentials') );
+            setTimeout(() => {
+                dispatch( clearErrorMessage() );
+            }, 10);
+        }
+    }
+
+    const oauthLogin = async({ email }:SignInFormDataInterface) => {
+        dispatch( onChecking() );
+        try {
+            const { data } = await InventoryBackend.post('/auth/oauth',{ email });
+            localStorage.setItem('token', data.token );
+            localStorage.setItem("token-init-date", new Date().getTime().toString());
+            dispatch( onLogin({ username: data.user.username, email: data.user.email }) );
+            
+        } catch (error) {
+            dispatch( onLogout('Invalid Credentials') );
+            setTimeout(() => {
+                dispatch( clearErrorMessage() );
+            }, 10);
+        }
+    }
 
 
     const checkAuthToken = async() => {
@@ -51,6 +85,10 @@ export const useAuthStore = () => {
         }
     }
 
+    const getAuthUrl = () => {
+  window.location.href = 'http://localhost:3000/api/auth/google'; // Or whatever your backend route is
+};
+
     const startLogout = () => {
         localStorage.clear();
         dispatch(onLogout());
@@ -68,6 +106,9 @@ export const useAuthStore = () => {
         checkAuthToken,
         startLogin,
         startLogout,
+        getAuthUrl,
+        oauthLogin,
+        OAuth2Login
     }
 
 }

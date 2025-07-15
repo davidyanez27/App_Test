@@ -6,18 +6,21 @@ import { AuthRepository } from "../../../domain/repository/";
 export class AuthRepositoryImpl implements AuthRepository {
 
     constructor (
-        private readonly userDatasource : AuthDatasource,
+        private readonly authDatasource : AuthDatasource,
     ){}
+    OAuth2(token: string): Promise<string> {
+        return this.authDatasource.OAuth2(token);
+    }
 
     register(user: RegisterUserDto): Promise<loginUserInterface> {
-        return this.userDatasource.register( user );
+        return this.authDatasource.register( user );
     }
     login(user: LoginUserDto): Promise<loginUserInterface> {
-        return this.userDatasource.login( user );
+        return this.authDatasource.login( user );
     }
     
     renewToken(token: string): Promise<string> {
-        return this.userDatasource.renewToken( token );
+        return this.authDatasource.renewToken( token );
     }
 
 

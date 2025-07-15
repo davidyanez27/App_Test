@@ -27,8 +27,11 @@ export const AppRouter = () => {
     checkAuthToken();
   }, []);
 
+
+
   return (
     <Routes>
+
       {status === "not-authenticated" ? (
         <>
           <Route path="/auth/singin" element={<SignIn />} />

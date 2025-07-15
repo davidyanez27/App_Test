@@ -124,7 +124,7 @@ model User {
   username       String   @unique
   email          String   @unique
   emailValidated Boolean  @map("email_validated")
-  password       String
+  password       String?
   firstName      String   @map("first_name")
   lastName       String   @map("last_name")
   parentUser     User?    @relation("UserToParent", fields: [parentUserId], references: [id])

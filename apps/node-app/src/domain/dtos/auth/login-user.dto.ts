@@ -1,7 +1,7 @@
 export class LoginUserDto {
     constructor(
         public readonly email:string,
-        public readonly password: string,
+        public readonly password?: string,
 
 
     ){}
@@ -11,7 +11,7 @@ export class LoginUserDto {
 
         
         if( !email ) return ['email property is required', undefined];
-        if( !password ) return ['password property is required', undefined];
+        // if( !password ) return ['password property is required', undefined];
         return [undefined, new LoginUserDto(email, password)]
     }
 
